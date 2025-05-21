@@ -1,0 +1,50 @@
+version: "3.8"
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - SUPABASE_URL=http://supabase:5432
+      - SUPABASE_KEY=your_supabase_key
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - redis
+      - supabase
+
+  worker:
+    build: ./worker
+    environment:
+      - SUPABASE_URL=http://supabase:5432
+      - SUPABASE_KEY=your_supabase_key
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - backend
+      - redis
+      - supabase
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+  supabase:
+    image: supabase/postgres:15.1.0.63
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: example
+      POSTGRES_DB: trainnet
+    volumes:
+      - supabase_data:/var/lib/postgresql/data
+
+volumes:
+  supabase_data:
